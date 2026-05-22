@@ -2,11 +2,20 @@ import { google } from 'googleapis';
 import { Booking, BlockedSlot, BookingType, LabEvent } from '@/types';
 
 function getAuth() {
+  let credentials: Record<string, string>;
+
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_B64) {
+    const json = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_B64, 'base64').toString('utf-8');
+    credentials = JSON.parse(json);
+  } else {
+    credentials = {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL!,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').replace(/\r/g, '') ?? '',
+    };
+  }
+
   return new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').replace(/\r/g, ''),
-    },
+    credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 }
