@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { Booking, BlockedSlot, BookingType, LabEvent } from '@/types';
+import { Booking, BlockedSlot, BookingType, LabEvent, DayHours } from '@/types';
 
 function getAuth() {
   let credentials: Record<string, string>;
@@ -28,6 +28,17 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID!;
 const BOOKINGS_SHEET = 'Bookings';
 const BLOCKED_SHEET = 'BlockedSlots';
 const EVENTS_SHEET = 'Events';
+const HOURS_SHEET = 'OpenHours';
+
+const DEFAULT_HOURS: DayHours[] = [
+  { day: 'Monday',    open: '10:00', close: '18:00', status: 'open',   note: '' },
+  { day: 'Tuesday',   open: '10:00', close: '18:00', status: 'open',   note: '' },
+  { day: 'Wednesday', open: '10:00', close: '18:00', status: 'open',   note: '' },
+  { day: 'Thursday',  open: '10:00', close: '18:00', status: 'open',   note: '' },
+  { day: 'Friday',    open: '10:00', close: '18:00', status: 'open',   note: '' },
+  { day: 'Saturday',  open: '10:00', close: '18:00', status: 'open',   note: '' },
+  { day: 'Sunday',    open: '10:00', close: '18:00', status: 'closed', note: '' },
+];
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
 
@@ -199,6 +210,57 @@ export async function getEvents(): Promise<LabEvent[]> {
     }));
 }
 
+// ── Open Hours ────────────────────────────────────────────────────────────────
+// OpenHours sheet: A=Day, B=Open, C=Close, D=Status, E=Note
+
+export async function getOpenHours(): Promise<DayHours[]> {
+  try {
+    const sheets = getSheets();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${HOURS_SHEET}!A2:E8`,
+    });
+    const rows = res.data.values ?? [];
+    if (rows.length === 0) return DEFAULT_HOURS;
+    return rows.map((row) => ({
+      day:    row[0] ?? '',
+      open:   row[1] ?? '10:00',
+      close:  row[2] ?? '18:00',
+      status: (row[3] === 'closed' ? 'closed' : 'open') as 'open' | 'closed',
+      note:   row[4] ?? '',
+    }));
+  } catch {
+    // Tab doesn't exist yet — return defaults
+    return DEFAULT_HOURS;
+  }
+}
+
+export async function updateDayHours(hours: DayHours): Promise<void> {
+  const sheets = getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${HOURS_SHEET}!A2:A8`,
+  });
+  const rows = res.data.values ?? [];
+  const rowIndex = rows.findIndex((r) => r[0] === hours.day);
+  if (rowIndex === -1) {
+    // Day not found — append it
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${HOURS_SHEET}!A:E`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[hours.day, hours.open, hours.close, hours.status, hours.note]] },
+    });
+  } else {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${HOURS_SHEET}!A${rowIndex + 2}:E${rowIndex + 2}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[hours.day, hours.open, hours.close, hours.status, hours.note]] },
+    });
+  }
+}
+
 // ── Sheet initialiser (call once) ─────────────────────────────────────────────
 
 export async function ensureSheetHeaders(): Promise<void> {
@@ -234,4 +296,28 @@ export async function ensureSheetHeaders(): Promise<void> {
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: eventsHeaders },
   });
+
+  const hoursHeaders = [['Day', 'Open', 'Close', 'Status', 'Note']];
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${HOURS_SHEET}!A1:E1`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: hoursHeaders },
+  });
+
+  // Seed default hours if sheet is empty
+  const existing = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${HOURS_SHEET}!A2:A8`,
+  });
+  if (!existing.data.values?.length) {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${HOURS_SHEET}!A:E`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: DEFAULT_HOURS.map((h) => [h.day, h.open, h.close, h.status, h.note]),
+      },
+    });
+  }
 }

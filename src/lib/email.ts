@@ -82,6 +82,40 @@ function wrapEmail(title: string, body: string): string {
 </html>`;
 }
 
+function generateICS(booking: Booking): string {
+  const machine = getMachine(booking.machine);
+  const isTraining = booking.bookingType === 'toolTraining';
+  const summary = isTraining
+    ? `Tool Training — ${machine?.name ?? booking.machine}`
+    : `PCL Pass — ${machine?.name ?? booking.machine}`;
+  const description =
+    `Booked by: ${booking.name}\\nEmail: ${booking.email}\\nPhone: ${booking.phone}\\nBooking ID: ${booking.id}`;
+  const dateStr = booking.date.replace(/-/g, '');
+  const start = booking.startTime.replace(':', '') + '00';
+  const end   = booking.endTime.replace(':', '') + '00';
+  const now   = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Paper Crane Lab//Booking//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${booking.id}@papercranelab.com`,
+    `DTSTAMP:${now}`,
+    `DTSTART;TZID=Asia/Kolkata:${dateStr}T${start}`,
+    `DTEND;TZID=Asia/Kolkata:${dateStr}T${end}`,
+    `SUMMARY:${summary}`,
+    `DESCRIPTION:${description}`,
+    'LOCATION:835\\, 10th Main Road\\, Water Tank Road\\, Indiranagar\\, Bangalore - 38',
+    'ORGANIZER;CN=Paper Crane Lab:mailto:bookings@papercranelab.com',
+    `ATTENDEE;RSVP=FALSE;CN=${booking.name}:mailto:${booking.email}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+}
+
 async function sendEmail(params: Parameters<typeof resend.emails.send>[0]): Promise<void> {
   const { data, error } = await resend.emails.send(params);
   if (error) {
@@ -164,5 +198,11 @@ export async function sendAdminNotification(booking: Booking): Promise<void> {
     to: ADMIN_EMAILS,
     subject: `New ${label} — ${machine?.name} · ${formatDate(booking.date)}`,
     html,
+    attachments: [
+      {
+        filename: `pcl-booking-${booking.id.slice(0, 8)}.ics`,
+        content: Buffer.from(generateICS(booking)).toString('base64'),
+      },
+    ],
   });
 }

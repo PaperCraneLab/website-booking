@@ -11,19 +11,17 @@ export default function BookPage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Book at <span className="text-pcl-blue">Paper Crane Lab</span>
           </h1>
-          <p className="text-xl georgia-text max-w-2xl mb-4">
-            If you haven't used a machine before, you'll need to complete a Tool Training session first — a short 1:1 with one of our team members. Once trained, you can book a PCL Pass to use the machine independently.
+          <p className="text-xl georgia-text max-w-2xl">
+            Choose a machine below to book a PCL Pass. If you haven't used the machine before,
+            you can tick <strong>Tool Training</strong> on the booking form and we'll guide you through it.
           </p>
-          <a href="#tool-training" className="text-pcl-blue font-semibold hover:underline">
-            Go to Tool Training →
-          </a>
         </div>
       </section>
 
-      {/* PCL Pass */}
+      {/* Pass pricing */}
       <section className="py-16 bg-white">
         <div className="container">
-          <SectionTitle title="Book a PCL Pass" subtitle="For members who have already completed tool training" />
+          <SectionTitle title="Book a PCL Pass" subtitle="Access to any machine during lab hours" />
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
             {Object.entries(PASS_TYPES).map(([key, pt]) => (
@@ -37,36 +35,23 @@ export default function BookPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {MACHINES.map((machine) => (
-              <MachineCard key={machine.id} machine={machine} bookingType="pass" />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Tool Training */}
-      <section className="py-16 bg-gray-50 paper-crane-bg" id="tool-training">
-        <div className="container">
-          <SectionTitle title="Book Tool Training" subtitle="1:1 guided session with a PCL team member · ₹500 flat fee" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MACHINES.map((machine) => (
-              <MachineCard key={machine.id} machine={machine} bookingType="toolTraining" />
+              <MachineCard key={machine.id} machine={machine} />
             ))}
           </div>
         </div>
       </section>
 
       {/* Info */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-gray-50">
         <div className="container">
           <div className="bg-pcl-yellow/20 border border-pcl-yellow rounded-lg p-6 flex gap-4">
             <span className="text-2xl shrink-0">💡</span>
             <div>
-              <h3 className="font-bold text-pcl-dark-gray mb-1">First time here?</h3>
+              <h3 className="font-bold text-pcl-dark-gray mb-1">First time on a machine?</h3>
               <p className="text-gray-600 text-sm">
-                PCL Passes are for members who have already completed tool training. Book a Tool
-                Training session first if you haven't used the machine before. A maximum of{' '}
-                <strong>2 passes</strong> can be active in the lab at any time. Tool training
-                sessions are exclusive — no passes can be booked at the same time.
+                No problem — just tick <strong>I need Tool Training</strong> on the booking form.
+                A PCL team member will guide you through a 1:1 session (₹500 flat fee).
+                A maximum of <strong>2 passes</strong> can be active in the lab at any time.
               </p>
             </div>
           </div>

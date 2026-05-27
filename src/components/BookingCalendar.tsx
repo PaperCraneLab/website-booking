@@ -37,8 +37,8 @@ export default function BookingCalendar({ selected, onSelect }: Props) {
           row: 'flex w-full mt-1',
           cell: 'h-9 w-9 text-center text-sm p-0 relative',
           day: 'h-9 w-9 p-0 font-normal rounded-lg hover:bg-pcl-blue/10 transition-colors text-pcl-dark-gray',
-          day_selected: 'bg-pcl-blue text-white hover:bg-pcl-blue font-semibold',
-          day_today: 'text-pcl-blue font-semibold',
+          day_selected: '!bg-pcl-blue !text-white hover:!bg-pcl-blue font-semibold rounded-lg',
+          day_today: '!text-pcl-blue font-semibold',
           day_outside: 'text-gray-300 opacity-50',
           day_disabled: 'text-gray-300 cursor-not-allowed hover:bg-transparent',
         }}

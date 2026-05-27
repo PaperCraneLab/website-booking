@@ -37,6 +37,14 @@ export interface TimeSlot {
   count: number;       // active bookings at this time across all machines
 }
 
+export interface DayHours {
+  day: string;            // Monday … Sunday
+  open: string;           // HH:mm
+  close: string;          // HH:mm
+  status: 'open' | 'closed';
+  note: string;
+}
+
 export interface LabEvent {
   title: string;
   description: string;

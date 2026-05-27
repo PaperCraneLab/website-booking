@@ -79,6 +79,10 @@ function ConfirmationContent() {
           </div>
         </div>
 
+        <div className="bg-pcl-blue/5 border border-pcl-blue/20 rounded-lg p-4 text-sm text-pcl-dark-gray mb-3">
+          💳 <strong>Payment</strong> can be made at Paper Crane Lab via <strong>UPI</strong> when you arrive.
+        </div>
+
         <div className="bg-pcl-yellow/20 border border-pcl-yellow rounded-lg p-4 text-sm text-pcl-dark-gray">
           <strong>Need to cancel or reschedule?</strong>{' '}
           Email us at{' '}

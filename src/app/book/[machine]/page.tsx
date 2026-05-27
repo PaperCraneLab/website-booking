@@ -20,9 +20,11 @@ export default function BookPage() {
   const router = useRouter();
   const machine = getMachine(machineId);
 
-  const bookingType: BookingType =
-    searchParams.get('type') === 'toolTraining' ? 'toolTraining' : 'pass';
-  const isTraining = bookingType === 'toolTraining';
+  const [needsTraining, setNeedsTraining] = useState(
+    searchParams.get('type') === 'toolTraining'
+  );
+  const bookingType: BookingType = needsTraining ? 'toolTraining' : 'pass';
+  const isTraining = needsTraining;
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [passType, setPassType] = useState<PassType>('hourly');
@@ -143,18 +145,10 @@ export default function BookPage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-pcl-dark-gray">{machine.name}</h1>
-              <p className="georgia-text text-gray-500">
-                {isTraining ? 'Tool Training session — guided 1:1 with a PCL team member' : machine.description}
-              </p>
+              <p className="georgia-text text-gray-500">{machine.description}</p>
             </div>
           </div>
 
-          {isTraining && (
-            <div className="mt-4 bg-pcl-yellow/20 border border-pcl-yellow rounded-lg px-4 py-3 text-sm text-pcl-dark-gray">
-              <strong>Tool Training</strong> — Flat fee: <strong>₹{TOOL_TRAINING_PRICE}</strong>.
-              No passes can be booked in the same time slot.
-            </div>
-          )}
         </div>
       </div>
 
@@ -164,12 +158,28 @@ export default function BookPage() {
 
           {/* Step 1 */}
           <section className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">
-              {isTraining ? '1. Select duration' : '1. Choose pass type'}
-            </h2>
+            <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">1. Booking type</h2>
+
+            {/* Tool training toggle */}
+            <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-pcl-yellow/60 bg-pcl-yellow/10 mb-5">
+              <input
+                type="checkbox"
+                checked={needsTraining}
+                onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(1); }}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pcl-blue"
+              />
+              <div>
+                <p className="font-bold text-pcl-dark-gray text-sm">I need Tool Training for this machine</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  First time on this machine? A PCL team member will guide you. Flat fee: <strong>₹500</strong>.
+                  No other passes can be active during a training session.
+                </p>
+              </div>
+            </label>
+
             {isTraining ? (
               <>
-                <p className="text-sm text-gray-500 mb-4">How many hours do you need for your training?</p>
+                <p className="text-sm font-semibold text-pcl-dark-gray mb-3">How many hours do you need?</p>
                 <HourSelector max={8} value={hours} onChange={setHours} />
               </>
             ) : (
