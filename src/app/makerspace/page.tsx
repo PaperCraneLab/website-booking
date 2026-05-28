@@ -5,6 +5,8 @@ import EventCard from '@/components/EventCard';
 import { getEvents } from '@/lib/google-sheets';
 import { LabEvent } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Makerspace — Paper Crane Lab',
   description: 'Book a PCL Pass and use our makerspace machines.',
