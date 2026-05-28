@@ -198,16 +198,16 @@ export async function getEvents(): Promise<LabEvent[]> {
   });
   const rows = res.data.values ?? [];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD in UTC
 
   return rows
     .filter((r) => {
-      if (!r[0]) return false;                        // no title → skip
+      if (!r[0]) return false;
       const publish = (r[7] ?? '').toString().trim().toUpperCase();
-      if (publish !== '' && publish !== 'Y') return false; // hide only if explicitly N (or non-Y)
-      const parsed = new Date(r[2] ?? '');
-      if (!isNaN(parsed.getTime()) && parsed < today) return false;    // past event
+      if (publish !== '' && publish !== 'Y') return false;
+      // Only filter by date when column C is clearly YYYY-MM-DD format
+      const dateStr = (r[2] ?? '').toString().trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr < todayStr) return false;
       return true;
     })
     .map((row) => ({
