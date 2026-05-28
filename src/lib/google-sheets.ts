@@ -194,18 +194,28 @@ export async function getEvents(): Promise<LabEvent[]> {
   const sheets = getSheets();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${EVENTS_SHEET}!A2:G`,
+    range: `${EVENTS_SHEET}!A2:H`,
   });
   const rows = res.data.values ?? [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   return rows
-    .filter((r) => r[0])
+    .filter((r) => {
+      if (!r[0]) return false;                        // no title → skip
+      if ((r[7] ?? '').toString().toUpperCase() !== 'Y') return false; // not published
+      const parsed = new Date(r[2] ?? '');
+      if (!isNaN(parsed.getTime()) && parsed < today) return false;    // past event
+      return true;
+    })
     .map((row) => ({
-      title: row[0] ?? '',
+      title:       row[0] ?? '',
       description: row[1] ?? '',
-      date: row[2] ?? '',
-      time: row[3] ?? '',
-      cost: row[4] ?? '',
-      imageUrl: row[5] ?? '',
+      date:        row[2] ?? '',
+      time:        row[3] ?? '',
+      cost:        row[4] ?? '',
+      imageUrl:    row[5] ?? '',
       bookingLink: row[6] ?? '',
     }));
 }
@@ -289,10 +299,10 @@ export async function ensureSheetHeaders(): Promise<void> {
     requestBody: { values: blockedHeaders },
   });
 
-  const eventsHeaders = [['Title', 'Description', 'Date', 'Time', 'Cost', 'Image URL', 'Booking Link']];
+  const eventsHeaders = [['Title', 'Description', 'Date', 'Time', 'Cost', 'Image URL', 'Booking Link', 'Publish']];
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${EVENTS_SHEET}!A1:G1`,
+    range: `${EVENTS_SHEET}!A1:H1`,
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: eventsHeaders },
   });
