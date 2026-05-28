@@ -74,10 +74,17 @@ export default async function MakerspacePage() {
           </div>
 
           {events.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event, i) => (
-                <EventCard key={i} event={event} />
-              ))}
+            <div className="relative">
+              <div className="overflow-y-auto max-h-[840px] pr-2 pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#11B2CA #f3f4f6' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((event, i) => (
+                    <EventCard key={i} event={event} />
+                  ))}
+                </div>
+              </div>
+              {events.length > 3 && (
+                <div className="pointer-events-none absolute bottom-0 left-0 right-2 h-16 bg-gradient-to-t from-pcl-blue/5 to-transparent rounded-b-lg" />
+              )}
             </div>
           ) : (
             <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-pcl-blue/30">
