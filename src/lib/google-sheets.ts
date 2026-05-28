@@ -204,7 +204,8 @@ export async function getEvents(): Promise<LabEvent[]> {
   return rows
     .filter((r) => {
       if (!r[0]) return false;                        // no title → skip
-      if ((r[7] ?? '').toString().toUpperCase() !== 'Y') return false; // not published
+      const publish = (r[7] ?? '').toString().trim().toUpperCase();
+      if (publish !== '' && publish !== 'Y') return false; // hide only if explicitly N (or non-Y)
       const parsed = new Date(r[2] ?? '');
       if (!isNaN(parsed.getTime()) && parsed < today) return false;    // past event
       return true;
