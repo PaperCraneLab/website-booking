@@ -17,7 +17,7 @@ export default function EventCard({ event }: Props) {
         {/* 4:3 image — clickable to open description */}
         <button
           onClick={() => setOpen(true)}
-          className="block w-full aspect-[4/3] overflow-hidden bg-gray-100 relative group"
+          className="block w-full aspect-[4/5] overflow-hidden bg-gray-100 relative group"
         >
           {event.imageUrl ? (
             <img
@@ -79,7 +79,7 @@ export default function EventCard({ event }: Props) {
           </DialogHeader>
 
           {event.imageUrl && (
-            <div className="aspect-[4/3] overflow-hidden rounded-lg bg-gray-100 -mx-1">
+            <div className="aspect-[4/5] overflow-hidden rounded-lg bg-gray-100 -mx-1">
               <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
             </div>
           )}
