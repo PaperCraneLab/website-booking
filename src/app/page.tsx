@@ -28,6 +28,7 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-4">
                 <a href="#what-we-do" className="btn-primary">Explore Our Programs</a>
                 <Link href="/makerspace" className="btn-secondary">Visit Makerspace</Link>
+                <Link href="/makerspace#events" className="btn-secondary">Upcoming Events</Link>
               </div>
             </div>
             <div className="md:w-1/2 relative">
