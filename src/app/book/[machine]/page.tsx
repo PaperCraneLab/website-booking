@@ -3,9 +3,9 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { getMachine, OPEN_HOURS, PASS_TYPES, TOOL_TRAINING_PRICE } from '@/lib/machines';
+import { getMachine, TOOL_TRAINING_PRICE } from '@/lib/machines';
 import { PassType, BookingType, TimeSlot } from '@/types';
-import { addHours, formatDisplayTime, parseHour } from '@/lib/utils';
+import { addHours, formatDisplayTime, parseMinutes } from '@/lib/utils';
 import BookingCalendar from '@/components/BookingCalendar';
 import TimeSlotGrid from '@/components/TimeSlotGrid';
 import PassTypeSelector from '@/components/PassTypeSelector';
@@ -31,7 +31,10 @@ export default function BookPage() {
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
-  const [hours, setHours] = useState(1);
+  const [hours, setHours] = useState(0.5);
+  const [openTime, setOpenTime] = useState('10:00');
+  const [closeTime, setCloseTime] = useState('18:00');
+  const [dayClosed, setDayClosed] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -41,25 +44,25 @@ export default function BookPage() {
   const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
 
   const maxHours = selectedStart
-    ? OPEN_HOURS.end - parseHour(selectedStart)
-    : OPEN_HOURS.end - OPEN_HOURS.start;
+    ? (parseMinutes(closeTime) - parseMinutes(selectedStart)) / 60
+    : (parseMinutes(closeTime) - parseMinutes(openTime)) / 60;
 
-  const endTime = selectedStart
-    ? passType === 'fullDay' && !isTraining
-      ? `${String(OPEN_HOURS.end).padStart(2, '0')}:00`
-      : addHours(selectedStart, hours)
-    : null;
+  const endTime = selectedStart ? addHours(selectedStart, hours) : null;
 
   const fetchSlots = useCallback(async () => {
     if (!dateStr) return;
     setSlotsLoading(true);
     setSelectedStart(null);
+    setDayClosed(false);
     try {
       const res = await fetch(
         `/api/availability?date=${dateStr}&machine=${machineId}&type=${bookingType}`
       );
       const data = await res.json();
       setSlots(data.slots ?? []);
+      setOpenTime(data.openTime ?? '10:00');
+      setCloseTime(data.closeTime ?? '18:00');
+      setDayClosed(data.closed ?? false);
     } catch {
       setSlots([]);
     } finally {
@@ -71,7 +74,7 @@ export default function BookPage() {
 
   useEffect(() => {
     setSelectedStart(null);
-    setHours(1);
+    setHours(0.5);
   }, [passType]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,6 +83,7 @@ export default function BookPage() {
     setError(null);
     setSubmitting(true);
     try {
+      const sessionHours = (parseMinutes(endTime) - parseMinutes(selectedStart)) / 60;
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,11 +93,7 @@ export default function BookPage() {
           startTime: selectedStart,
           endTime,
           passType: isTraining ? 'hourly' : passType,
-          hours: isTraining
-            ? parseHour(endTime) - parseHour(selectedStart)
-            : passType === 'fullDay'
-            ? OPEN_HOURS.end - OPEN_HOURS.start
-            : hours,
+          hours: isTraining ? sessionHours : hours,
           name,
           email,
           phone,
@@ -148,7 +148,6 @@ export default function BookPage() {
               <p className="georgia-text text-gray-500">{machine.description}</p>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -165,7 +164,7 @@ export default function BookPage() {
               <input
                 type="checkbox"
                 checked={needsTraining}
-                onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(1); }}
+                onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(0.5); }}
                 className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pcl-blue"
               />
               <div>
@@ -179,8 +178,8 @@ export default function BookPage() {
 
             {isTraining ? (
               <>
-                <p className="text-sm font-semibold text-pcl-dark-gray mb-3">How many hours do you need?</p>
-                <HourSelector max={8} value={hours} onChange={setHours} />
+                <p className="text-sm font-semibold text-pcl-dark-gray mb-3">How long do you need?</p>
+                <HourSelector max={Math.min(8, maxHours || 8)} value={hours} onChange={setHours} />
               </>
             ) : (
               <PassTypeSelector value={passType} onChange={(t) => setPassType(t)} />
@@ -198,33 +197,29 @@ export default function BookPage() {
             <section className="bg-white rounded-lg shadow-md p-6">
               <h2 className="font-bold text-lg text-pcl-dark-gray mb-1">3. Select start time</h2>
               <p className="text-gray-400 text-sm mb-4">
-                {format(selectedDate, 'EEEE, d MMMM yyyy')} · 10am – 6pm
+                {format(selectedDate, 'EEEE, d MMMM yyyy')}
+                {!dayClosed && openTime && closeTime && (
+                  <> · {formatDisplayTime(openTime)} – {formatDisplayTime(closeTime)}</>
+                )}
               </p>
 
-              {!isTraining && passType === 'fullDay' ? (
-                <>
-                  <p className="text-sm text-gray-500 mb-3">
-                    Full day pass runs <strong>10:00 AM – 6:00 PM</strong>. Choose your start time:
-                  </p>
-                  <TimeSlotGrid
-                    slots={slots}
-                    selectedStart={selectedStart}
-                    selectedEnd={selectedStart ? `${String(OPEN_HOURS.end).padStart(2, '0')}:00` : null}
-                    onSelectStart={setSelectedStart}
-                    loading={slotsLoading}
-                  />
-                </>
+              {dayClosed ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-2xl mb-2">🔒</p>
+                  <p className="font-semibold">The lab is closed on this day.</p>
+                  <p className="text-sm mt-1">Please choose a different date.</p>
+                </div>
               ) : (
                 <TimeSlotGrid
                   slots={slots}
                   selectedStart={selectedStart}
                   selectedEnd={selectedStart && endTime ? endTime : null}
-                  onSelectStart={(t) => setSelectedStart(t)}
+                  onSelectStart={(t) => { setSelectedStart(t); setHours(0.5); }}
                   loading={slotsLoading}
                 />
               )}
 
-              {selectedStart && !isTraining && passType !== 'fullDay' && (
+              {selectedStart && !isTraining && (
                 <div className="mt-5">
                   <p className="text-sm font-semibold text-pcl-dark-gray mb-3">
                     Duration (starting {formatDisplayTime(selectedStart)}):
@@ -283,7 +278,7 @@ export default function BookPage() {
                   </div>
                   <div className="flex justify-between text-sm text-gray-600 mb-3">
                     <span>Duration</span>
-                    <span>{hours} hour{hours !== 1 ? 's' : ''}</span>
+                    <span>{formatDisplayTime(selectedStart)} – {formatDisplayTime(endTime)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between items-center">
                     <span className="font-bold text-pcl-dark-gray">Total</span>
@@ -293,8 +288,8 @@ export default function BookPage() {
               ) : (
                 <PriceSummary
                   passType={passType}
-                  hours={passType === 'fullDay' ? OPEN_HOURS.end - OPEN_HOURS.start : hours}
-                  materialFee={machine.materialFee}
+                  hours={hours}
+                  machine={machine}
                   startTime={selectedStart}
                   endTime={endTime}
                 />

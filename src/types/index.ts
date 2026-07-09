@@ -1,4 +1,4 @@
-export type PassType = 'hourly' | 'tenHour' | 'fullDay';
+export type PassType = 'hourly' | 'tenHour';
 
 export type BookingType = 'pass' | 'toolTraining';
 
@@ -59,9 +59,10 @@ export interface Machine {
   id: string;
   name: string;
   description: string;
-  materialFee: number;
+  materialFee: number;  // per-hour for firstHourOnly machines; flat (0) for others
   icon: string;
   accentColor: string;
+  pricingModel?: 'standard' | 'firstHourOnly';
 }
 
 export interface BookingFormData {

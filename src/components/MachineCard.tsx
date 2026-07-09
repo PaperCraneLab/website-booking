@@ -15,7 +15,7 @@ export default function MachineCard({ machine }: Props) {
 
         {machine.materialFee > 0 && (
           <div className="mt-3 inline-flex items-center bg-pcl-yellow/20 text-pcl-dark-gray rounded-full px-3 py-1 text-xs font-semibold self-start">
-            +₹{machine.materialFee} material fee
+            +₹{machine.materialFee}/hr material
           </div>
         )}
 

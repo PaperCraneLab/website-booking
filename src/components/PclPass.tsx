@@ -51,18 +51,12 @@ export default function PclPass() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           <PricingTier
             name="Hourly Pass"
             price="₹200/hr"
             description="Use any tool for an hour during lab hours"
             features={['Access to all basic tools', 'Vinyl cutter', 'Soldering equipment', 'Electronics prototyping tools', 'Basic woodworking equipment', 'Drills & Jigsaw', 'Sewing machine']}
-          />
-          <PricingTier
-            name="One-Day Pass"
-            price="₹1,000"
-            description="Work the whole day from 10am – 6pm"
-            features={['Full day access (10am - 6pm)', 'Access to all basic tools', 'Vinyl cutter', 'Soldering equipment', 'Electronics prototyping tools', 'Woodworking equipment', 'Drills, Jigsaw & Sewing machine']}
           />
           <PricingTier
             name="10 Hour Pack"
@@ -85,7 +79,7 @@ export default function PclPass() {
                 </div>
                 <div>
                   <h4 className="font-bold mb-1">3D Printers</h4>
-                  <p className="text-gray-600">Creality: +₹50 · Bambu: +₹100 (includes filament)</p>
+                  <p className="text-gray-600">₹200 machine fee (first hour) + filament cost per hour: Creality ₹50/hr · Bambu ₹100/hr</p>
                 </div>
               </div>
               <div className="flex items-start">

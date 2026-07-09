@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getBookingsForDate, createBooking, getBlockedSlots } from '@/lib/google-sheets';
 import { sendUserConfirmation, sendAdminNotification } from '@/lib/email';
-import { getMachine, calculatePrice, MAX_CONCURRENT_PASSES, TOOL_TRAINING_PRICE } from '@/lib/machines';
+import { getMachine, getBasePrice, getMaterialFee, MAX_CONCURRENT_PASSES, TOOL_TRAINING_PRICE } from '@/lib/machines';
 import { Booking, BookingType } from '@/types';
-import { parseHour } from '@/lib/utils';
+import { parseMinutes } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +13,11 @@ export async function POST(request: NextRequest) {
 
     const resolvedBookingType: BookingType = bookingType === 'toolTraining' ? 'toolTraining' : 'pass';
 
-    // Validate machine
     const machineData = getMachine(machine);
     if (!machineData) {
       return NextResponse.json({ error: 'Invalid machine' }, { status: 400 });
     }
 
-    // Validate required fields
     if (!date || !startTime || !endTime || !name || !email || !phone) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -28,63 +26,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pass type is required for pass bookings' }, { status: 400 });
     }
 
-    const startHour = parseHour(startTime);
-    const endHour = parseHour(endTime);
+    const startMin = parseMinutes(startTime);
+    const endMin = parseMinutes(endTime);
 
-    if (endHour <= startHour) {
+    if (endMin <= startMin) {
       return NextResponse.json({ error: 'Invalid time range' }, { status: 400 });
     }
 
-    // Re-check availability server-side to prevent race conditions
     const [existingBookings, blockedSlots] = await Promise.all([
       getBookingsForDate(date),
       getBlockedSlots(date),
     ]);
 
-    for (let hour = startHour; hour < endHour; hour++) {
-      // Check if blocked
+    // Validate every 30-min slot in the requested range
+    for (let slotMin = startMin; slotMin < endMin; slotMin += 30) {
+      const slotEnd = slotMin + 30;
+
       const isBlocked = blockedSlots.some((s) => {
         if (s.machine !== 'all' && s.machine !== machine) return false;
-        const start = parseHour(s.startTime);
-        const end = parseHour(s.endTime);
-        return start <= hour && end > hour;
+        const start = parseMinutes(s.startTime);
+        const end = parseMinutes(s.endTime);
+        return start < slotEnd && end > slotMin;
       });
       if (isBlocked) {
         return NextResponse.json({ error: 'This time slot is blocked' }, { status: 409 });
       }
 
-      const bookingsAtHour = existingBookings.filter((b) => {
-        const start = parseHour(b.startTime);
-        const end = parseHour(b.endTime);
-        return start <= hour && end > hour;
+      const bookingsAtSlot = existingBookings.filter((b) => {
+        const start = parseMinutes(b.startTime);
+        const end = parseMinutes(b.endTime);
+        return start < slotEnd && end > slotMin;
       });
 
-      const passesAtHour = bookingsAtHour.filter((b) => b.bookingType !== 'toolTraining');
-      const trainingsAtHour = bookingsAtHour.filter((b) => b.bookingType === 'toolTraining');
+      const passesAtSlot = bookingsAtSlot.filter((b) => b.bookingType !== 'toolTraining');
+      const trainingsAtSlot = bookingsAtSlot.filter((b) => b.bookingType === 'toolTraining');
 
       if (resolvedBookingType === 'toolTraining') {
-        // Tool training requires the slot to be completely free
-        if (bookingsAtHour.length > 0) {
+        if (bookingsAtSlot.length > 0) {
           return NextResponse.json(
             { error: 'Tool training slots must be unoccupied — someone has already booked this time' },
             { status: 409 }
           );
         }
       } else {
-        // Pass booking
-        if (trainingsAtHour.length > 0) {
+        if (trainingsAtSlot.length > 0) {
           return NextResponse.json(
             { error: 'A tool training session is scheduled at this time — no passes can be booked' },
             { status: 409 }
           );
         }
-        if (passesAtHour.length >= MAX_CONCURRENT_PASSES) {
+        if (passesAtSlot.length >= MAX_CONCURRENT_PASSES) {
           return NextResponse.json(
             { error: `The lab is fully booked at this time (max ${MAX_CONCURRENT_PASSES} passes)` },
             { status: 409 }
           );
         }
-        if (bookingsAtHour.some((b) => b.machine === machine)) {
+        if (bookingsAtSlot.some((b) => b.machine === machine)) {
           return NextResponse.json(
             { error: 'This machine is already booked at the selected time' },
             { status: 409 }
@@ -93,14 +90,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const sessionHours = (endMin - startMin) / 60;
+
     let basePrice: number;
     let materialFee: number;
     if (resolvedBookingType === 'toolTraining') {
       basePrice = TOOL_TRAINING_PRICE;
       materialFee = 0;
     } else {
-      basePrice = calculatePrice(passType, hours);
-      materialFee = machineData.materialFee;
+      basePrice = getBasePrice(passType, hours ?? sessionHours, machineData);
+      materialFee = getMaterialFee(machineData, hours ?? sessionHours);
     }
     const total = basePrice + materialFee;
 
@@ -111,7 +110,7 @@ export async function POST(request: NextRequest) {
       startTime,
       endTime,
       passType: resolvedBookingType === 'toolTraining' ? 'hourly' : passType,
-      hours: resolvedBookingType === 'toolTraining' ? endHour - startHour : hours,
+      hours: resolvedBookingType === 'toolTraining' ? sessionHours : (hours ?? sessionHours),
       name,
       email,
       phone,

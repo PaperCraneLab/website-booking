@@ -9,6 +9,7 @@ const navLinks = [
   { href: '/makerspace', label: 'Makerspace' },
   { href: '/makerspace#events', label: 'Upcoming Events' },
   { href: '/book', label: 'Book a Pass' },
+  { href: '/faq', label: 'FAQ' },
   { href: '/#donate', label: 'Donate' },
 ];
 

@@ -12,12 +12,11 @@ interface Props {
 const TYPES: { key: PassType; emoji: string }[] = [
   { key: 'hourly', emoji: '⏱️' },
   { key: 'tenHour', emoji: '🎟️' },
-  { key: 'fullDay', emoji: '☀️' },
 ];
 
 export default function PassTypeSelector({ value, onChange }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {TYPES.map(({ key, emoji }) => {
         const pt = PASS_TYPES[key];
         const selected = value === key;
