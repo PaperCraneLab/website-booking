@@ -241,7 +241,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {blocks.map((b, i) => (
+                  {[...blocks].sort((a, b) => b.date.localeCompare(a.date) || b.startTime.localeCompare(a.startTime)).map((b, i) => (
                     <tr key={i} className="border-t border-gray-50">
                       <td className="px-5 py-3 text-pcl-dark-gray">{b.machine === 'all' ? 'All machines' : getMachine(b.machine)?.name ?? b.machine}</td>
                       <td className="px-5 py-3 text-gray-600">{b.date}</td>

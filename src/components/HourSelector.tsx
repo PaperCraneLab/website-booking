@@ -10,7 +10,7 @@ interface Props {
 
 export default function HourSelector({ max, value, onChange }: Props) {
   const steps: number[] = [];
-  for (let h = 0.5; h <= max + 0.001; h += 0.5) {
+  for (let h = 1.0; h <= max + 0.001; h += 0.5) {
     steps.push(Math.round(h * 2) / 2);
   }
 

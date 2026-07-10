@@ -1,16 +1,41 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { isBefore, startOfDay } from 'date-fns';
+import { isBefore, startOfDay, format } from 'date-fns';
 
 interface Props {
   selected: Date | undefined;
   onSelect: (date: Date | undefined) => void;
+  machine?: string;
+  bookingType?: string;
 }
 
-export default function BookingCalendar({ selected, onSelect }: Props) {
+export default function BookingCalendar({ selected, onSelect, machine, bookingType }: Props) {
   const today = startOfDay(new Date());
+  const [displayMonth, setDisplayMonth] = useState(new Date());
+  const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
+
+  const fetchMonthAvailability = useCallback(async (month: Date) => {
+    if (!machine) return;
+    const monthStr = format(month, 'yyyy-MM');
+    try {
+      const res = await fetch(
+        `/api/availability/month?month=${monthStr}&machine=${machine}&type=${bookingType ?? 'pass'}`
+      );
+      const data = await res.json();
+      if (Array.isArray(data.unavailableDates)) {
+        setUnavailable(new Set(data.unavailableDates));
+      }
+    } catch {
+      // on error show all dates as available
+    }
+  }, [machine, bookingType]);
+
+  useEffect(() => {
+    fetchMonthAvailability(displayMonth);
+  }, [fetchMonthAvailability, displayMonth]);
 
   return (
     <div className="flex justify-center">
@@ -18,7 +43,12 @@ export default function BookingCalendar({ selected, onSelect }: Props) {
         mode="single"
         selected={selected}
         onSelect={onSelect}
-        disabled={(date) => isBefore(date, today)}
+        month={displayMonth}
+        onMonthChange={(m) => { setDisplayMonth(m); }}
+        disabled={(date) => {
+          if (isBefore(date, today)) return true;
+          return unavailable.has(format(date, 'yyyy-MM-dd'));
+        }}
         showOutsideDays={false}
         classNames={{
           root: 'font-sans',

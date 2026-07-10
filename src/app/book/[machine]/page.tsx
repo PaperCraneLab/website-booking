@@ -31,7 +31,7 @@ export default function BookPage() {
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
-  const [hours, setHours] = useState(0.5);
+  const [hours, setHours] = useState(1);
   const [openTime, setOpenTime] = useState('10:00');
   const [closeTime, setCloseTime] = useState('18:00');
   const [dayClosed, setDayClosed] = useState(false);
@@ -74,7 +74,7 @@ export default function BookPage() {
 
   useEffect(() => {
     setSelectedStart(null);
-    setHours(0.5);
+    setHours(1);
   }, [passType]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -164,7 +164,7 @@ export default function BookPage() {
               <input
                 type="checkbox"
                 checked={needsTraining}
-                onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(0.5); }}
+                onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(1); }}
                 className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pcl-blue"
               />
               <div>
@@ -189,7 +189,12 @@ export default function BookPage() {
           {/* Step 2 */}
           <section className="bg-white rounded-lg shadow-md p-6">
             <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">2. Select a date</h2>
-            <BookingCalendar selected={selectedDate} onSelect={setSelectedDate} />
+            <BookingCalendar
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              machine={machineId}
+              bookingType={bookingType}
+            />
           </section>
 
           {/* Step 3 */}
@@ -214,7 +219,7 @@ export default function BookPage() {
                   slots={slots}
                   selectedStart={selectedStart}
                   selectedEnd={selectedStart && endTime ? endTime : null}
-                  onSelectStart={(t) => { setSelectedStart(t); setHours(0.5); }}
+                  onSelectStart={(t) => { setSelectedStart(t); setHours(1); }}
                   loading={slotsLoading}
                 />
               )}

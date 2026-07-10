@@ -174,22 +174,22 @@ export default async function MakerspacePage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-gray-50">
-        <div className="container">
-          <SectionTitle title="Frequently Asked Questions" subtitle="Common questions about our makerspace" centered />
-          <div className="max-w-3xl mx-auto space-y-6">
-            {[
-              { q: 'Do I need experience to use the makerspace?', a: 'Not at all! We welcome makers of all experience levels. For beginners, we offer 1:1 orientation sessions and basic skills workshops to help you get started. You can book the same with our PCL Pass.' },
-              { q: 'Can I bring my own materials?', a: "Yes, you're welcome to bring your own materials. We also have a variety of materials available for purchase in our lab." },
-              { q: 'Is there an age requirement?', a: 'Members must be 18+ to use the space independently. We offer supervised sessions for younger makers, and family workshops where adults can work with children.' },
-              { q: 'Do you offer any discounts on PCL Pass?', a: 'We offer reduced rates for nonprofits and community organisations. Contact us for more information.' },
-            ].map(({ q, a }) => (
-              <div key={q} className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="font-bold text-lg mb-2">{q}</h3>
-                <p className="text-gray-700">{a}</p>
-              </div>
-            ))}
+      {/* FAQ callout */}
+      <section className="py-12 bg-gray-50">
+        <div className="container max-w-3xl">
+          <div className="bg-white rounded-xl border border-pcl-blue/20 shadow-sm p-8 flex flex-col sm:flex-row items-center gap-6">
+            <div className="text-4xl shrink-0">🤔</div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-bold text-xl text-pcl-dark-gray mb-1">
+                Not sure whether you need a Pass or Tool Training?
+              </h3>
+              <p className="text-gray-500 text-sm">
+                We&apos;ve answered the most common questions — from what to bring, how long to book, and when to get trained.
+              </p>
+            </div>
+            <Link href="/faq" className="btn-primary shrink-0 whitespace-nowrap">
+              Check our FAQ
+            </Link>
           </div>
         </div>
       </section>
