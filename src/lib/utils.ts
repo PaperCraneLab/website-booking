@@ -45,6 +45,18 @@ export function addHours(time: string, hours: number): string {
   return addMinutes(time, Math.round(hours * 60));
 }
 
+// Current time in IST (UTC+5:30) as minutes from midnight
+export function nowISTMinutes(): number {
+  const nowIST = new Date(Date.now() + 330 * 60 * 1000);
+  return nowIST.getUTCHours() * 60 + nowIST.getUTCMinutes();
+}
+
+// Today's date in IST as YYYY-MM-DD
+export function todayIST(): string {
+  const nowIST = new Date(Date.now() + 330 * 60 * 1000);
+  return nowIST.toISOString().slice(0, 10);
+}
+
 export function formatDuration(hours: number): string {
   const totalMins = Math.round(hours * 60);
   if (totalMins < 60) return `${totalMins}m`;

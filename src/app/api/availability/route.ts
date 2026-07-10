@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getBookingsForDate, getBlockedSlots, getOpenHours } from '@/lib/google-sheets';
 import { OPEN_HOURS, MAX_CONCURRENT_PASSES, getMachine } from '@/lib/machines';
 import { TimeSlot } from '@/types';
-import { parseMinutes } from '@/lib/utils';
+import { parseMinutes, todayIST, nowISTMinutes } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ slots: [], openTime: null, closeTime: null, closed: true });
     }
 
+    // Same-day bookings require at least 4 hours advance notice
+    const sameDayCutoff = date === todayIST() ? nowISTMinutes() + 4 * 60 : 0;
+
     const slots: TimeSlot[] = [];
 
     for (let slotMin = openMinutes; slotMin < closeMinutes; slotMin += 30) {
@@ -62,7 +65,9 @@ export async function GET(request: NextRequest) {
       });
 
       let available: boolean;
-      if (bookingType === 'toolTraining') {
+      if (slotMin < sameDayCutoff) {
+        available = false;
+      } else if (bookingType === 'toolTraining') {
         available = !isBlocked && !machineBooked && bookingsAtSlot.length === 0;
       } else {
         available =

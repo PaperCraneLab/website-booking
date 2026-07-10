@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBookings, getBlockedSlots, getOpenHours } from '@/lib/google-sheets';
 import { OPEN_HOURS, MAX_CONCURRENT_PASSES, getMachine } from '@/lib/machines';
-import { parseMinutes } from '@/lib/utils';
+import { parseMinutes, todayIST, nowISTMinutes } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +31,9 @@ export async function GET(request: NextRequest) {
     );
     const monthBlocks = allBlocks.filter((b) => b.date.startsWith(month));
 
+    const todayStr = todayIST();
+    const currentISTMinutes = nowISTMinutes();
+
     const [year, mon] = month.split('-').map(Number);
     const daysInMonth = new Date(year, mon, 0).getDate();
 
@@ -55,6 +58,7 @@ export async function GET(request: NextRequest) {
       const dayBlocks = monthBlocks.filter((b) => b.date === date);
 
       let hasAvailableSlot = false;
+      const sameDayCutoff = date === todayStr ? currentISTMinutes + 4 * 60 : 0;
 
       for (let slotMin = openMinutes; slotMin < closeMinutes; slotMin += 30) {
         const slotEnd = slotMin + 30;
@@ -77,7 +81,9 @@ export async function GET(request: NextRequest) {
         });
 
         let available: boolean;
-        if (bookingType === 'toolTraining') {
+        if (slotMin < sameDayCutoff) {
+          available = false;
+        } else if (bookingType === 'toolTraining') {
           available = !isBlocked && !machineBooked && bookingsAtSlot.length === 0;
         } else {
           available =

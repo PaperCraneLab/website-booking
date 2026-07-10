@@ -1,7 +1,8 @@
 import SectionTitle from '@/components/SectionTitle';
 import MachineCard from '@/components/MachineCard';
+import TrainingProjects from '@/components/TrainingProjects';
 import { MACHINES, PASS_TYPES } from '@/lib/machines';
-
+import Link from 'next/link';
 export default function BookPage() {
   return (
     <div className="min-h-screen">
@@ -35,6 +36,13 @@ export default function BookPage() {
               Check our FAQ
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Training projects */}
+      <section className="py-6 bg-gray-50">
+        <div className="container">
+          <TrainingProjects />
         </div>
       </section>
 
