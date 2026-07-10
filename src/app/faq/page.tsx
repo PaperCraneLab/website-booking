@@ -24,7 +24,7 @@ const faqs: FAQItem[] = [
     a: (
       <>
         Each tool training session is specific to the machine you are booking. Our team will cover safety, basic operation, and common techniques. Reach out to us at{' '}
-        <a href="mailto:hello@papercranelab.com" className="text-pcl-blue hover:underline">hello@papercranelab.com</a>{' '}
+        <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline">lab@papercranelab.com</a>{' '}
         if you want more details on what a specific training covers.
       </>
     ),
@@ -36,13 +36,14 @@ const faqs: FAQItem[] = [
       <div className="space-y-2">
         <p>Here is a quick guide by machine:</p>
         <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-          <li><strong>3D Printers</strong> — An STL or 3MF file of your model. We can help you slice it on arrival.</li>
-          <li><strong>Laser Cutter</strong> — An SVG or DXF file with your cut/engrave paths. Know your material thickness.</li>
-          <li><strong>Vinyl Cutter</strong> — An SVG file with clean, single-line vector paths.</li>
+          <li><strong>3D Printers</strong> — An STL, 3MF, or OBJ file of your model. We can help you slice it on arrival.</li>
+          <li><strong>Laser Cutter</strong> — An SVG or DXF file with your cut/engrave paths. PNG or BITMAP works for engraving. Know your material thickness.</li>
+          <li><strong>Vinyl Cutter</strong> — A PNG of what you want to cut works perfectly</li>
           <li><strong>Electronics</strong> — Your schematic or circuit diagram, and any code you plan to upload.</li>
           <li><strong>Woodworking / Sewing</strong> — Your design sketch or measurements. No file needed.</li>
         </ul>
-        <p className="text-sm text-gray-500 mt-2">Not sure? Email us beforehand and we can advise.</p>
+        <p className="text-sm text-gray-500 mt-2">Not sure? Email us beforehand at{' '}
+        <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline">lab@papercranelab.com</a>{' '} and we can advise.</p>
       </div>
     ),
   },
@@ -52,7 +53,7 @@ const faqs: FAQItem[] = [
     a: (
       <>
         Yes! Email us at{' '}
-        <a href="mailto:hello@papercranelab.com" className="text-pcl-blue hover:underline">hello@papercranelab.com</a>{' '}
+        <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline">lab@papercranelab.com</a>{' '}
         and we will be happy to answer questions, help you plan your session, or schedule a quick call.
       </>
     ),
@@ -68,15 +69,15 @@ const faqs: FAQItem[] = [
     a: (
       <>
         We generally encourage you to come in and use the machines yourself — that is the spirit of a makerspace. If that is truly not possible, email us at{' '}
-        <a href="mailto:hello@papercranelab.com" className="text-pcl-blue hover:underline">hello@papercranelab.com</a>{' '}
-        and we will review it on a case-by-case basis. Pricing for remote prints is 1.5× the standard PCL Pass rate.
+        <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline">lab@papercranelab.com</a>{' '}
+        and we will review it on a case-by-case basis. Pricing for remote prints is 1.5 times the standard PCL Pass rate.
       </>
     ),
   },
   {
     category: '3D Printing',
     q: 'Do you design files for me?',
-    a: 'No, we do not design files. However, you can learn the basics of designing for specific machines through our workshops or as part of a tool training session. Ask us about upcoming workshops at hello@papercranelab.com.',
+    a: 'No, we do not design files. However, you can learn the basics of designing for specific machines through our workshops or as part of a tool training session. Ask us about upcoming workshops at lab@papercranelab.com.',
   },
   {
     category: 'Pricing & Passes',
@@ -84,7 +85,7 @@ const faqs: FAQItem[] = [
     a: (
       <>
         Yes! School and college students get a <strong>20% discount</strong> on PCL Passes — just show your ID when you arrive. For other discount enquiries (NGOs, educators, bulk bookings), email us at{' '}
-        <a href="mailto:hello@papercranelab.com" className="text-pcl-blue hover:underline">hello@papercranelab.com</a>.
+        <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline">lab@papercranelab.com</a>.
       </>
     ),
   },
@@ -115,8 +116,8 @@ export default function FAQPage() {
           />
           <p className="text-gray-600 mt-2">
             Can&apos;t find your answer here?{' '}
-            <a href="mailto:hello@papercranelab.com" className="text-pcl-blue hover:underline font-medium">
-              Email us at hello@papercranelab.com
+            <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline font-medium">
+              Email us at lab@papercranelab.com
             </a>
           </p>
         </div>

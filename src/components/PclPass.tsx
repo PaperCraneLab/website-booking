@@ -108,7 +108,7 @@ export default function PclPass() {
           </Link>
           <p className="mt-4 text-gray-600">
             Or email us at{' '}
-            <a href="mailto:hello@papercranelab.com" className="text-pcl-blue hover:underline">hello@papercranelab.com</a>
+            <a href="mailto:lab@papercranelab.com" className="text-pcl-blue hover:underline">lab@papercranelab.com</a>
             {' '}with subject "PCL Pass"
           </p>
         </div>

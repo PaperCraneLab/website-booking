@@ -18,6 +18,26 @@ export default function BookPage() {
         </div>
       </section>
 
+        {/* FAQ callout */}
+      <section className="py-12 bg-gray-50">
+        <div className="container max-w-3xl">
+          <div className="bg-white rounded-xl border border-pcl-blue/20 shadow-sm p-8 flex flex-col sm:flex-row items-center gap-6">
+            <div className="text-4xl shrink-0">🤔</div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-bold text-xl text-pcl-dark-gray mb-1">
+                Not sure whether you need a Pass or Tool Training?
+              </h3>
+              <p className="text-gray-500 text-sm">
+                We&apos;ve answered the most common questions — from what to bring, how long to book, and when to get trained.
+              </p>
+            </div>
+            <Link href="/faq" className="btn-primary shrink-0 whitespace-nowrap">
+              Check our FAQ
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Pass pricing */}
       <section className="py-16 bg-white">
         <div className="container">
