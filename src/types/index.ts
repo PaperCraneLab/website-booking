@@ -43,6 +43,7 @@ export interface DayHours {
   close: string;          // HH:mm
   status: 'open' | 'closed';
   note: string;
+  trainingOpen?: boolean; // false = tool training disabled, passes still bookable
 }
 
 export interface LabEvent {

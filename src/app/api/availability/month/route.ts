@@ -45,8 +45,9 @@ export async function GET(request: NextRequest) {
 
       const dayHours = allHours.find((h) => h.day === dayName);
       const isClosed = dayHours?.status === 'closed';
+      const isTrainingClosed = bookingType === 'toolTraining' && dayHours?.trainingOpen === false;
 
-      if (isClosed) {
+      if (isClosed || isTrainingClosed) {
         unavailableDates.push(date);
         continue;
       }

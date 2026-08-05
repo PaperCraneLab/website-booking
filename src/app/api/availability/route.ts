@@ -31,11 +31,12 @@ export async function GET(request: NextRequest) {
     const openMinutes = parseMinutes(dayHours?.open ?? `${OPEN_HOURS.start}:00`);
     const closeMinutes = parseMinutes(dayHours?.close ?? `${OPEN_HOURS.end}:00`);
     const isClosed = dayHours?.status === 'closed';
+    const isTrainingClosed = bookingType === 'toolTraining' && dayHours?.trainingOpen === false;
 
     const openTime = `${String(Math.floor(openMinutes / 60)).padStart(2, '0')}:${String(openMinutes % 60).padStart(2, '0')}`;
     const closeTime = `${String(Math.floor(closeMinutes / 60)).padStart(2, '0')}:${String(closeMinutes % 60).padStart(2, '0')}`;
 
-    if (isClosed) {
+    if (isClosed || isTrainingClosed) {
       return NextResponse.json({ slots: [], openTime: null, closeTime: null, closed: true });
     }
 

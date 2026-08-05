@@ -95,7 +95,7 @@ export default function AdminDashboard() {
     fetchData();
   }
 
-  function updateHoursLocal(day: string, field: keyof DayHours, value: string) {
+  function updateHoursLocal(day: string, field: keyof DayHours, value: string | boolean) {
     setHours((prev) =>
       prev.map((h) => (h.day === day ? { ...h, [field]: value } : h))
     );
@@ -293,6 +293,16 @@ export default function AdminDashboard() {
                       <span className="text-xs text-gray-400">Close</span>
                       <input type="time" value={day.close} onChange={(e) => updateHoursLocal(day.day, 'close', e.target.value)} className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pcl-blue/30" />
                     </div>
+
+                    <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={day.trainingOpen === false}
+                        onChange={(e) => updateHoursLocal(day.day, 'trainingOpen', !e.target.checked)}
+                        className="rounded border-gray-300 text-pcl-pink"
+                      />
+                      <span className="text-gray-500">Training closed</span>
+                    </label>
                   </>
                 )}
 
