@@ -5,8 +5,7 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      { source: '/annualreport', destination: '/annual_report/index.html' },
-      { source: '/annualreport/:path*', destination: '/annual_report/:path*' },
+      { source: '/annualreport', destination: '/annualreport/index.html' },
     ];
   },
 };
