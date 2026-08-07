@@ -161,15 +161,15 @@ export default function BookPage() {
 
             {/* Tool training toggle */}
             <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-pcl-yellow/60 bg-pcl-yellow/10 mb-5">
-              <input
+              {/* <input
                 type="checkbox"
                 checked={needsTraining}
                 onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(1); }}
                 className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pcl-blue"
-              />
+              /> */}
               <div>
-                <p className="font-bold text-pcl-dark-gray text-sm">I need Tool Training for this machine</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                {/* <p className="font-bold text-pcl-dark-gray text-sm">I need Tool Training for this machine</p> */}
+                <p className="font-bold text-pcl-dark-gray text-sm">
                   Tool training is closed from Aug 10th to Aug 31st. You can still go ahead and use the standard PCL Pass to use the machines!
                 </p>
               </div>
