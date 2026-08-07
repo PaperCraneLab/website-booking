@@ -170,8 +170,7 @@ export default function BookPage() {
               <div>
                 <p className="font-bold text-pcl-dark-gray text-sm">I need Tool Training for this machine</p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  First time on this machine? A PCL team member will guide you. Flat fee: <strong>₹500</strong>.
-                  No other passes can be active during a training session.
+                  Tool training is closed from Aug 10th to Aug 31st. You can still go ahead and use the standard PCL Pass to use the machines!
                 </p>
               </div>
             </label>
