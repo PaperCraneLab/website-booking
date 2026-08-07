@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBookingsForDate, getBlockedSlots, getOpenHours } from '@/lib/google-sheets';
+
+export const dynamic = 'force-dynamic';
 import { OPEN_HOURS, MAX_CONCURRENT_PASSES, getMachine } from '@/lib/machines';
 import { TimeSlot } from '@/types';
 import { parseMinutes, todayIST, nowISTMinutes } from '@/lib/utils';

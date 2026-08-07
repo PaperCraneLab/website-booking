@@ -231,7 +231,7 @@ export async function getOpenHours(): Promise<DayHours[]> {
     const sheets = getSheets();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${HOURS_SHEET}!A2:F8`,
+      range: `${HOURS_SHEET}!A2:F`,
     });
     const rows = res.data.values ?? [];
     // Always return all 7 days in order, falling back to defaults for missing rows
@@ -256,7 +256,7 @@ export async function updateDayHours(hours: DayHours): Promise<void> {
   const sheets = getSheets();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${HOURS_SHEET}!A2:A8`,
+    range: `${HOURS_SHEET}!A2:A`,
   });
   const rows = res.data.values ?? [];
   const rowIndex = rows.findIndex((r) => r[0] === hours.day);
