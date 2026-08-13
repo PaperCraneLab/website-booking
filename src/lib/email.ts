@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM_ADDRESS = 'Paper Crane Lab <bookings@papercranelab.com>';
-const ADMIN_EMAILS = ['hello@papercranelab.com', 'aditi@papercranelab.com'];
+const ADMIN_EMAILS = ['hello@papercranelab.com', 'aditi@papercranelab.com', 'sai@papercranelab.com'];
 
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number);
