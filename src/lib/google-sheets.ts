@@ -244,7 +244,7 @@ export async function getOpenHours(): Promise<DayHours[]> {
         close:         row[2] ?? '18:00',
         status:        (row[3] === 'closed' ? 'closed' : 'open') as 'open' | 'closed',
         note:          row[4] ?? '',
-        trainingOpen:  row[5] !== 'false',
+        trainingOpen:  row[5] !== 'closed' && row[5] !== false && row[5] !== 'false',
         trainingStart: row[6] ?? '10:00',
         trainingEnd:   row[7] ?? '18:00',
       };
@@ -262,7 +262,7 @@ export async function updateDayHours(hours: DayHours): Promise<void> {
   });
   const rows = res.data.values ?? [];
   const rowIndex = rows.findIndex((r) => r[0] === hours.day);
-  const trainingVal = hours.trainingOpen === false ? 'false' : 'true';
+  const trainingVal = hours.trainingOpen === false ? 'closed' : 'open';
   const rowData = [hours.day, hours.open, hours.close, hours.status, hours.note, trainingVal, hours.trainingStart ?? '10:00', hours.trainingEnd ?? '18:00'];
   if (rowIndex === -1) {
     await sheets.spreadsheets.values.append({
