@@ -1,7 +1,7 @@
 'use client';
 
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { getMachine, TOOL_TRAINING_PRICE } from '@/lib/machines';
 import { PassType, BookingType, TimeSlot } from '@/types';
@@ -16,15 +16,8 @@ import Link from 'next/link';
 
 export default function BookPage() {
   const { machine: machineId } = useParams<{ machine: string }>();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const machine = getMachine(machineId);
-
-  const [needsTraining, setNeedsTraining] = useState(
-    searchParams.get('type') === 'toolTraining'
-  );
-  const bookingType: BookingType = needsTraining ? 'toolTraining' : 'pass';
-  const isTraining = needsTraining;
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [passType, setPassType] = useState<PassType>('hourly');
@@ -35,6 +28,15 @@ export default function BookPage() {
   const [openTime, setOpenTime] = useState('10:00');
   const [closeTime, setCloseTime] = useState('18:00');
   const [dayClosed, setDayClosed] = useState(false);
+
+  // Training availability from the API
+  const [trainingOpen, setTrainingOpen] = useState(true);
+  const [trainingStart, setTrainingStart] = useState<string | null>(null);
+  const [trainingEnd, setTrainingEnd] = useState<string | null>(null);
+
+  // Whether the user has opted in to training
+  const [needsTraining, setNeedsTraining] = useState(false);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -42,6 +44,21 @@ export default function BookPage() {
   const [error, setError] = useState<string | null>(null);
 
   const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null;
+
+  // Training is available at the selected start time if:
+  // - training is open that day
+  // - the start time falls within the training window
+  const isTrainingAvailableAtTime = useMemo(() => {
+    if (!trainingOpen || !selectedStart) return false;
+    if (!trainingStart || !trainingEnd) return true;
+    const slotMin  = parseMinutes(selectedStart);
+    const trainMin = parseMinutes(trainingStart);
+    const trainEnd = parseMinutes(trainingEnd);
+    return slotMin >= trainMin && slotMin < trainEnd;
+  }, [trainingOpen, trainingStart, trainingEnd, selectedStart]);
+
+  const isTraining = needsTraining && isTrainingAvailableAtTime;
+  const bookingType: BookingType = isTraining ? 'toolTraining' : 'pass';
 
   const maxHours = selectedStart
     ? (parseMinutes(closeTime) - parseMinutes(selectedStart)) / 60
@@ -53,29 +70,37 @@ export default function BookPage() {
     if (!dateStr) return;
     setSlotsLoading(true);
     setSelectedStart(null);
+    setNeedsTraining(false);
     setDayClosed(false);
     try {
-      const res = await fetch(
-        `/api/availability?date=${dateStr}&machine=${machineId}&type=${bookingType}`
-      );
+      const res = await fetch(`/api/availability?date=${dateStr}&machine=${machineId}`);
       const data = await res.json();
       setSlots(data.slots ?? []);
       setOpenTime(data.openTime ?? '10:00');
       setCloseTime(data.closeTime ?? '18:00');
       setDayClosed(data.closed ?? false);
+      setTrainingOpen(data.trainingOpen ?? true);
+      setTrainingStart(data.trainingStart ?? null);
+      setTrainingEnd(data.trainingEnd ?? null);
     } catch {
       setSlots([]);
     } finally {
       setSlotsLoading(false);
     }
-  }, [dateStr, machineId, bookingType]);
+  }, [dateStr, machineId]);
 
   useEffect(() => { fetchSlots(); }, [fetchSlots]);
 
   useEffect(() => {
     setSelectedStart(null);
     setHours(1);
+    setNeedsTraining(false);
   }, [passType]);
+
+  // Reset training opt-in when slot changes or training becomes unavailable
+  useEffect(() => {
+    if (!isTrainingAvailableAtTime) setNeedsTraining(false);
+  }, [isTrainingAvailableAtTime]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -155,52 +180,29 @@ export default function BookPage() {
       <div className="container py-10 max-w-3xl">
         <form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* Step 1 */}
-          <section className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">1. Booking type</h2>
-
-            {/* Tool training toggle */}
-            <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-pcl-yellow/60 bg-pcl-yellow/10 mb-5">
-              <input
-                type="checkbox"
-                checked={needsTraining}
-                onChange={(e) => { setNeedsTraining(e.target.checked); setSelectedStart(null); setHours(1); }}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pcl-blue"
-              />
-              <div>
-                <p className="font-bold text-pcl-dark-gray text-sm">I need Tool Training for this machine</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  First time on this machine? A PCL team member will guide you. Flat fee: <strong>₹500</strong>.
-                  No other passes can be active during a training session.
-                </p>
-              </div>
-            </label>
-
-            {isTraining ? (
-              <>
-                <p className="text-sm font-semibold text-pcl-dark-gray mb-3">How long do you need?</p>
-                <HourSelector max={Math.min(8, maxHours || 8)} value={hours} onChange={setHours} />
-              </>
-            ) : (
+          {/* Step 1 — Pass type (only shown for non-training) */}
+          {!isTraining && (
+            <section className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">1. Pass type</h2>
               <PassTypeSelector value={passType} onChange={(t) => setPassType(t)} />
-            )}
-          </section>
+            </section>
+          )}
 
-          {/* Step 2 */}
+          {/* Step 2 — Date */}
           <section className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">2. Select a date</h2>
+            <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">{isTraining ? '1' : '2'}. Select a date</h2>
             <BookingCalendar
               selected={selectedDate}
               onSelect={setSelectedDate}
               machine={machineId}
-              bookingType={bookingType}
+              bookingType="pass"
             />
           </section>
 
-          {/* Step 3 */}
+          {/* Step 3 — Start time */}
           {selectedDate && (
             <section className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="font-bold text-lg text-pcl-dark-gray mb-1">3. Select start time</h2>
+              <h2 className="font-bold text-lg text-pcl-dark-gray mb-1">{isTraining ? '2' : '3'}. Select start time</h2>
               <p className="text-gray-400 text-sm mb-4">
                 {format(selectedDate, 'EEEE, d MMMM yyyy')}
                 {!dayClosed && openTime && closeTime && (
@@ -224,6 +226,40 @@ export default function BookPage() {
                 />
               )}
 
+              {/* Tool Training — shown after a slot is selected */}
+              {selectedStart && !dayClosed && (
+                <div className="mt-5 pt-5 border-t border-gray-100">
+                  {isTrainingAvailableAtTime ? (
+                    <label className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border-2 border-pcl-yellow/60 bg-pcl-yellow/10">
+                      <input
+                        type="checkbox"
+                        checked={needsTraining}
+                        onChange={(e) => { setNeedsTraining(e.target.checked); setHours(1); }}
+                        className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pcl-blue"
+                      />
+                      <div>
+                        <p className="font-bold text-pcl-dark-gray text-sm">I need Tool Training for this machine</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          First time on this machine? A PCL team member will guide you. Flat fee: <strong>₹500</strong>.
+                          No other passes can be active during a training session.
+                        </p>
+                      </div>
+                    </label>
+                  ) : (
+                    <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+                      <p className="text-sm font-semibold text-gray-500 mb-0.5">🚫 Tool training not available at this time</p>
+                      <p className="text-xs text-gray-400">
+                        Please note that you will need to already know how to use this machine to book this slot.
+                        {trainingOpen && trainingStart && trainingEnd && (
+                          <> Training is available {formatDisplayTime(trainingStart)} – {formatDisplayTime(trainingEnd)} on this day.</>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Duration selector */}
               {selectedStart && !isTraining && (
                 <div className="mt-5">
                   <p className="text-sm font-semibold text-pcl-dark-gray mb-3">
@@ -238,18 +274,26 @@ export default function BookPage() {
                 </div>
               )}
 
-              {isTraining && selectedStart && endTime && (
-                <p className="text-xs text-gray-400 mt-4">
-                  Training: {formatDisplayTime(selectedStart)} – {formatDisplayTime(endTime)}
-                </p>
+              {isTraining && selectedStart && (
+                <div className="mt-5">
+                  <p className="text-sm font-semibold text-pcl-dark-gray mb-3">
+                    Training duration (starting {formatDisplayTime(selectedStart)}):
+                  </p>
+                  <HourSelector max={Math.min(8, maxHours || 8)} value={hours} onChange={setHours} />
+                  {endTime && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Training: {formatDisplayTime(selectedStart)} – {formatDisplayTime(endTime)}
+                    </p>
+                  )}
+                </div>
               )}
             </section>
           )}
 
-          {/* Step 4 */}
+          {/* Step 4 — Your details */}
           {selectedDate && selectedStart && (
             <section className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">4. Your details</h2>
+              <h2 className="font-bold text-lg text-pcl-dark-gray mb-4">{isTraining ? '3' : '4'}. Your details</h2>
               <div className="space-y-4">
                 {[
                   { label: 'Full Name', type: 'text', value: name, onChange: setName, placeholder: 'Your full name' },

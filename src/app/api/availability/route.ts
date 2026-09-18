@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get('date');
   const machineId = searchParams.get('machine');
-  const bookingType = searchParams.get('type') ?? 'pass';
 
   if (!date || !machineId) {
     return NextResponse.json({ error: 'Missing date or machine' }, { status: 400 });
@@ -21,7 +20,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Resolve actual lab hours for the requested date
     const dayName = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
     const [bookings, blockedSlots, allHours] = await Promise.all([
       getBookingsForDate(date),
@@ -33,13 +31,17 @@ export async function GET(request: NextRequest) {
     const openMinutes = parseMinutes(dayHours?.open ?? `${OPEN_HOURS.start}:00`);
     const closeMinutes = parseMinutes(dayHours?.close ?? `${OPEN_HOURS.end}:00`);
     const isClosed = dayHours?.status === 'closed';
-    const isTrainingClosed = bookingType === 'toolTraining' && dayHours?.trainingOpen === false;
 
     const openTime = `${String(Math.floor(openMinutes / 60)).padStart(2, '0')}:${String(openMinutes % 60).padStart(2, '0')}`;
     const closeTime = `${String(Math.floor(closeMinutes / 60)).padStart(2, '0')}:${String(closeMinutes % 60).padStart(2, '0')}`;
 
-    if (isClosed || isTrainingClosed) {
-      return NextResponse.json({ slots: [], openTime: null, closeTime: null, closed: true });
+    // Training hours for this day
+    const trainingOpen = dayHours?.trainingOpen !== false;
+    const trainingStart = trainingOpen ? (dayHours?.trainingStart ?? openTime) : null;
+    const trainingEnd   = trainingOpen ? (dayHours?.trainingEnd   ?? closeTime) : null;
+
+    if (isClosed) {
+      return NextResponse.json({ slots: [], openTime: null, closeTime: null, closed: true, trainingOpen: false, trainingStart: null, trainingEnd: null });
     }
 
     // Same-day bookings require at least 4 hours advance notice
@@ -70,8 +72,6 @@ export async function GET(request: NextRequest) {
       let available: boolean;
       if (slotMin < sameDayCutoff) {
         available = false;
-      } else if (bookingType === 'toolTraining') {
-        available = !isBlocked && !machineBooked && bookingsAtSlot.length === 0;
       } else {
         available =
           !isBlocked &&
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       slots.push({ time, available, count: bookingsAtSlot.length });
     }
 
-    return NextResponse.json({ slots, openTime, closeTime, closed: false });
+    return NextResponse.json({ slots, openTime, closeTime, closed: false, trainingOpen, trainingStart, trainingEnd });
   } catch (err) {
     console.error('Availability error:', err);
     return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 });

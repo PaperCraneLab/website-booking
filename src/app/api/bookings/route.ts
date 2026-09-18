@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getBookingsForDate, createBooking, getBlockedSlots } from '@/lib/google-sheets';
+import { getBookingsForDate, createBooking, getBlockedSlots, getOpenHours } from '@/lib/google-sheets';
 import { sendUserConfirmation, sendAdminNotification } from '@/lib/email';
 import { getMachine, getBasePrice, getMaterialFee, MAX_CONCURRENT_PASSES, TOOL_TRAINING_PRICE } from '@/lib/machines';
 import { Booking, BookingType } from '@/types';
@@ -33,10 +33,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid time range' }, { status: 400 });
     }
 
-    const [existingBookings, blockedSlots] = await Promise.all([
+    const [existingBookings, blockedSlots, allHours] = await Promise.all([
       getBookingsForDate(date),
       getBlockedSlots(date),
+      getOpenHours(),
     ]);
+
+    // Validate tool training is available at the requested time
+    if (resolvedBookingType === 'toolTraining') {
+      const dayName = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+      const dayHours = allHours.find((h) => h.day === dayName);
+      if (dayHours?.trainingOpen === false) {
+        return NextResponse.json({ error: 'Tool training is not available on this day' }, { status: 409 });
+      }
+      if (dayHours?.trainingStart && dayHours?.trainingEnd) {
+        const trainStart = parseMinutes(dayHours.trainingStart);
+        const trainEnd   = parseMinutes(dayHours.trainingEnd);
+        if (startMin < trainStart || startMin >= trainEnd) {
+          return NextResponse.json({ error: `Tool training is only available ${dayHours.trainingStart}–${dayHours.trainingEnd} on this day` }, { status: 409 });
+        }
+      }
+    }
 
     // Validate every 30-min slot in the requested range
     for (let slotMin = startMin; slotMin < endMin; slotMin += 30) {

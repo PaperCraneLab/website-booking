@@ -294,15 +294,30 @@ export default function AdminDashboard() {
                       <input type="time" value={day.close} onChange={(e) => updateHoursLocal(day.day, 'close', e.target.value)} className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pcl-blue/30" />
                     </div>
 
-                    <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={day.trainingOpen === false}
-                        onChange={(e) => updateHoursLocal(day.day, 'trainingOpen', !e.target.checked)}
-                        className="rounded border-gray-300 text-pcl-pink"
-                      />
-                      <span className="text-gray-500">Training closed</span>
-                    </label>
+                    <div className="flex items-center gap-2 border-l border-gray-100 pl-3">
+                      <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={day.trainingOpen === false}
+                          onChange={(e) => updateHoursLocal(day.day, 'trainingOpen', !e.target.checked)}
+                          className="rounded border-gray-300 text-pcl-pink"
+                        />
+                        <span className="text-gray-500 text-xs">Training closed</span>
+                      </label>
+                    </div>
+
+                    {day.trainingOpen !== false && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-pcl-pink">Training</span>
+                          <input type="time" value={day.trainingStart ?? '10:00'} onChange={(e) => updateHoursLocal(day.day, 'trainingStart', e.target.value)} className="border border-pcl-pink/30 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pcl-pink/30" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-pcl-pink">–</span>
+                          <input type="time" value={day.trainingEnd ?? '18:00'} onChange={(e) => updateHoursLocal(day.day, 'trainingEnd', e.target.value)} className="border border-pcl-pink/30 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pcl-pink/30" />
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 

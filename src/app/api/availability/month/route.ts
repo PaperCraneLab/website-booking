@@ -45,9 +45,8 @@ export async function GET(request: NextRequest) {
 
       const dayHours = allHours.find((h) => h.day === dayName);
       const isClosed = dayHours?.status === 'closed';
-      const isTrainingClosed = bookingType === 'toolTraining' && dayHours?.trainingOpen === false;
 
-      if (isClosed || isTrainingClosed) {
+      if (isClosed) {
         unavailableDates.push(date);
         continue;
       }
@@ -84,8 +83,6 @@ export async function GET(request: NextRequest) {
         let available: boolean;
         if (slotMin < sameDayCutoff) {
           available = false;
-        } else if (bookingType === 'toolTraining') {
-          available = !isBlocked && !machineBooked && bookingsAtSlot.length === 0;
         } else {
           available =
             !isBlocked &&
